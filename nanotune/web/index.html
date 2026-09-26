@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nanoTune — your music, one page, no account</title>
+<meta name="description" content="Point it at a folder of music and press play. Next, previous, shuffle, repeat — on your own computer, offline.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">🎵</div>
+    <div>
+      <div class="brand-name">nanoTune</div>
+      <div class="brand-sub">Your music, one page, no account. Nothing is uploaded, nothing is changed.</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn ghost" id="folderBtn">📂&nbsp; Change folder</button>
+    <button class="btn ghost" id="helpBtn" title="How this works">?</button>
+  </div>
+</header>
+
+<main class="page">
+
+  <!-- ---------------------------------------------------------------- hero -->
+  <section class="hero" id="hero">
+    <h1>Where is your music?</h1>
+    <p class="hero-sub">Point nanoTune at a folder — it finds every song in it, and you press play.</p>
+    <div class="ask-row">
+      <input type="text" id="folderInput" spellcheck="false"
+             placeholder="for example  C:\Users\you\Music  or  /home/you/Music">
+      <button class="btn primary big" id="openBtn">Open it</button>
+    </div>
+    <button class="btn" id="browseBtn">Choose a folder in a window</button>
+    <div class="hero-note">Everything stays on this computer. The songs are never moved or changed.</div>
+  </section>
+
+  <!-- -------------------------------------------------------------- player -->
+  <section class="panel player" id="player" hidden>
+    <div class="now">
+      <div class="now-icon">🎶</div>
+      <div class="now-main">
+        <div class="now-title" id="nowTitle">—</div>
+        <div class="muted small" id="nowArtist"></div>
+      </div>
+    </div>
+    <audio id="audio" controls></audio>
+    <div class="controls">
+      <button class="btn" id="prevBtn" title="Previous">⏮</button>
+      <button class="btn primary" id="shuffleBtn" title="Shuffle">🔀</button>
+      <button class="btn primary" id="nextBtn" title="Next">⏭</button>
+      <button class="btn" id="repeatBtn" title="Repeat everything">🔁</button>
+    </div>
+    <div class="muted small center" id="nowSaid"></div>
+  </section>
+
+  <!-- ------------------------------------------------------------- library -->
+  <section class="block" id="libraryBlock" hidden>
+    <div class="block-head">
+      <h2 id="libraryTitle">The songs</h2>
+      <span class="muted" id="libraryHint"></span>
+    </div>
+    <div id="library" class="library"></div>
+  </section>
+
+</main>
+
+<!-- ------------------------------------------------------------------ modal -->
+<div class="backdrop" id="helpModal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h2>How this works</h2>
+      <button class="btn ghost small" data-close>✕</button>
+    </div>
+    <div class="modal-body prose">
+      <p><strong>1. Open a folder.</strong> Any folder with music in it — songs in
+      sub-folders are found too. It is remembered for next time.</p>
+      <p><strong>2. Press a song.</strong> It plays right on the page. ⏭ plays the next one,
+      🔀 mixes them up, 🔁 repeats them all.</p>
+      <p><strong>3. That is the whole thing.</strong> No account, no upload, no “sign in to
+      continue listening”. The songs stay exactly where they are.</p>
+      <p><strong>A song that will not play?</strong> The browser plays mp3, wav, ogg, m4a, flac
+      and a few others. Anything else is listed honestly as unplayable, not hidden.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn primary" data-close>Got it</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<script src="/app.js"></script>
+</body>
+</html>
