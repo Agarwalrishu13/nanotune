@@ -12,7 +12,7 @@ repeat. That is the whole thing.
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![python](https://img.shields.io/badge/python-3.9+-58a6ff.svg)]()
 [![dependencies](https://img.shields.io/badge/required%20deps-0-f0883e.svg)]()
-[![tests](https://img.shields.io/badge/tests-26%20passing-3ddc97.svg)]()
+[![tests](https://img.shields.io/badge/tests-32%20passing-3ddc97.svg)]()
 
 </div>
 
@@ -20,6 +20,12 @@ repeat. That is the whole thing.
 
 > **Part of [the nano family](https://github.com/Agarwalrishu13/nano)** — eleven offline-first apps for people who do not code. This is the map of the whole project.
 
+
+## What's new in 0.2
+
+- **Resume where you stopped.** Every song remembers its position — come back
+  tomorrow and it picks up mid-song where you left it.
+- **Shuffle and repeat are remembered** between visits.
 
 ## What this is, in one paragraph
 

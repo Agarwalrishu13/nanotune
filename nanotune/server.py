@@ -81,6 +81,11 @@ def create_app() -> App:
             return Error(listing.get("error", "That folder could not be read."))
         return Json(listing)
 
+    @app.get("/api/settings-toggles")
+    def get_toggles(_request):
+        remembered = store.settings()
+        return Json({"ok": True, "shuffle": remembered["shuffle"], "repeat": remembered["repeat"]})
+
     @app.post("/api/pick-folder")
     def pick_folder(request):
         if not _from_local_page(request, require_json=True):
@@ -152,6 +157,27 @@ def create_app() -> App:
         whole = Bytes(data, mime)
         whole.headers["Accept-Ranges"] = "bytes"
         return whole
+
+    @app.post("/api/position")
+    def set_position(request):
+        if not _from_local_page(request, require_json=True):
+            return Error("This app only answers to pages on this computer.", 403)
+        payload = request.json() or {}
+        saved = store.save_position(payload.get("path", ""), payload.get("seconds", 0))
+        return Json({"ok": True, "saved": saved})
+
+    @app.get("/api/position")
+    def get_position(request):
+        path = request.q("path", "")
+        return Json({"ok": True, "seconds": store.position_of(path)})
+
+    @app.post("/api/toggles")
+    def set_toggles(request):
+        if not _from_local_page(request, require_json=True):
+            return Error("This app only answers to pages on this computer.", 403)
+        payload = request.json() or {}
+        saved = store.save_settings({"shuffle": payload.get("shuffle"), "repeat": payload.get("repeat")})
+        return Json({"ok": True, "shuffle": saved["shuffle"], "repeat": saved["repeat"]})
 
     @app.post("/api/reveal")
     def reveal(request):

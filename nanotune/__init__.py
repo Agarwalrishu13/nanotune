@@ -10,7 +10,7 @@ changes a single file, and nothing is uploaded anywhere.
 """
 
 APP_NAME = "nanoTune"
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 TAGLINE = "your music, one page, no account"
 

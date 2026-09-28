@@ -272,3 +272,51 @@ class LocalPageGuardTests(ServerTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PositionTests(ServerTestCase):
+    """Resume where you stopped: positions are remembered per song."""
+
+    @classmethod
+    def setUpClass(cls):
+        ServerTestCase.setUpClass()
+        cls.song = Path(cls._tmp.name) / "resume-song.mp3"
+        cls.song.write_bytes(b"mp3")
+
+    def test_a_position_is_remembered_and_replaced(self):
+        store.save_position(self.song, 91.7)
+        self.assertEqual(store.position_of(self.song), 91)
+        store.save_position(self.song, 130.2)
+        self.assertEqual(store.position_of(self.song), 130)
+
+    def test_an_unknown_song_starts_from_the_top(self):
+        self.assertEqual(store.position_of(self.song / "ghost.mp3"), 0)
+
+    def test_silly_positions_are_ignored(self):
+        store.save_position(self.song, -5)
+        self.assertEqual(store.position_of(self.song), 0)
+        store.save_position(self.song, 10 ** 9)
+        self.assertEqual(store.position_of(self.song), 0)  # longer than a day: nonsense
+
+    def test_positions_of_deleted_songs_are_dropped(self):
+        ghost = Path(self._tmp.name) / "ghost.mp3"
+        ghost.write_bytes(b"x")
+        store.save_position(ghost, 30)
+        ghost.unlink()
+        store.save_position(self.song, 12)  # a clean-up pass runs on the next save
+        self.assertEqual(store.position_of(ghost), 0)
+
+    def test_toggles_are_remembered(self):
+        store.save_settings({"shuffle": True, "repeat": True})
+        self.assertTrue(store.settings()["shuffle"])
+        self.assertTrue(store.settings()["repeat"])
+
+    def test_over_http(self):
+        store.save_settings({"positions": {}})  # start from a clean slate
+        raw, status, _ = self.get("/api/position?path=" + urllib.request.quote(str(self.song)))
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(raw.decode())["seconds"], 0)
+        raw, status = self.post("/api/position", {"path": str(self.song), "seconds": 42})
+        self.assertEqual(status, 200)
+        raw, status, _ = self.get("/api/position?path=" + urllib.request.quote(str(self.song)))
+        self.assertEqual(json.loads(raw.decode())["seconds"], 42)

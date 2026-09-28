@@ -95,6 +95,10 @@ function play(index) {
   current = index;
   const song = songs[index];
   $("audio").src = "/api/stream?path=" + encodeURIComponent(song.path);
+  // Pick up where this song was stopped last time, unless it was the start or the end.
+  api("/api/position?path=" + encodeURIComponent(song.path)).then((data) => {
+    if (data.seconds > 5) $("audio").currentTime = data.seconds;
+  }).catch(() => {});
   $("audio").play().catch(() => toast("The browser refused to start playing.", "bad"));
   $("nowTitle").textContent = song.title;
   $("nowArtist").textContent = (song.artist ? song.artist + " — " : "") + song.what +
@@ -147,11 +151,26 @@ $("audio").addEventListener("ended", () => nextSong(true));
 $("shuffleBtn").onclick = () => {
   shuffle = !shuffle;
   $("shuffleBtn").classList.toggle("on", shuffle);
+  post("/api/toggles", { shuffle, repeat }).catch(() => {});
 };
 $("repeatBtn").onclick = () => {
   repeat = !repeat;
   $("repeatBtn").classList.toggle("on", repeat);
+  post("/api/toggles", { shuffle, repeat }).catch(() => {});
 };
+
+// Every few seconds while playing, remember where the song is.
+let lastSaved = 0;
+$("audio").addEventListener("timeupdate", () => {
+  if (current < 0 || !$("audio").src) return;
+  const now = Date.now();
+  if (now - lastSaved < 5000) return;
+  lastSaved = now;
+  const song = songs[current];
+  if (song && !$("audio").paused) {
+    post("/api/position", { path: song.path, seconds: $("audio").currentTime }).catch(() => {});
+  }
+});
 
 document.querySelectorAll("[data-close]").forEach((btn) => {
   btn.onclick = () => btn.closest(".backdrop").hidden = true;
@@ -164,6 +183,11 @@ document.querySelectorAll(".backdrop").forEach((backdrop) => {
 // ---------------------------------------------------------------- start
 (async () => {
   try {
+    try {
+      const toggles = await api("/api/settings-toggles");
+      if (toggles.shuffle) { shuffle = true; $("shuffleBtn").classList.add("on"); }
+      if (toggles.repeat) { repeat = true; $("repeatBtn").classList.add("on"); }
+    } catch (err) { /* optional nicety */ }
     const data = await api("/api/folders");
     if (data.last_folder) {
       $("folderInput").value = data.last_folder;

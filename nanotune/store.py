@@ -18,7 +18,14 @@ DEFAULT_SETTINGS = {
     "folders": [],
     # The one the page opens with.
     "last_folder": "",
+    # Where you stopped in each song, so the page can resume: {path: seconds}.
+    "positions": {},
+    # The little toggles the page remembers.
+    "shuffle": False,
+    "repeat": False,
 }
+
+MAX_POSITIONS = 200  # a map of every song ever started would only grow
 
 
 def data_dir() -> Path:
@@ -52,6 +59,12 @@ def save_settings(patch: dict) -> dict:
         current["folders"] = _clean_folders(patch["folders"])
     if "last_folder" in patch:
         current["last_folder"] = str(patch["last_folder"] or "").strip()
+    if "positions" in patch:
+        current["positions"] = _clean_positions(patch["positions"])
+    if "shuffle" in patch:
+        current["shuffle"] = bool(patch["shuffle"])
+    if "repeat" in patch:
+        current["repeat"] = bool(patch["repeat"])
     try:
         _settings_path().write_text(json.dumps(current, indent=2), encoding="utf-8")
     except OSError:
@@ -90,3 +103,40 @@ def forget_folder(path) -> list[str]:
     remaining = [f for f in settings()["folders"] if f != gone]
     save_settings({"folders": remaining})
     return remaining
+
+
+def _clean_positions(value) -> dict:
+    """Whole seconds for real files only, newest-touched first, capped."""
+    out: dict[str, int] = {}
+    if isinstance(value, dict):
+        for key, seconds in value.items():
+            try:
+                path, at = str(key), int(float(seconds))
+            except (TypeError, ValueError):
+                continue
+            if 0 < at < 60 * 60 * 24 and Path(path).is_file():
+                out[path] = at
+    return dict(list(out.items())[-MAX_POSITIONS:])
+
+
+def save_position(path, seconds: float) -> int:
+    """Remember where the song was stopped, rounded to whole seconds."""
+    try:
+        where = str(Path(path).resolve())
+        at = int(float(seconds))
+    except (OSError, TypeError, ValueError):
+        return 0
+    positions = settings()["positions"]
+    positions.pop(where, None)
+    positions[where] = max(0, at)
+    save_settings({"positions": positions})
+    return at
+
+
+def position_of(path) -> int:
+    """Where this song was last stopped; 0 means from the top."""
+    try:
+        where = str(Path(path).resolve())
+    except OSError:
+        return 0
+    return int(settings()["positions"].get(where, 0))
